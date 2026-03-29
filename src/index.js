@@ -152,7 +152,7 @@ async function autoSeed() {
   const settingsCount = await SettingsModel.countDocuments();
   if (settingsCount === 0) {
     for (const s of DEFAULT_SETTINGS) {
-      await SettingsModel.set(s.key, process.env[s.key.toUpperCase()] || s.value, { label: s.label, group: s.group });
+      await SettingsModel.set(s.key, s.value, { label: s.label, group: s.group });
     }
     logger.info(`✅ Seeded ${DEFAULT_SETTINGS.length} default settings`);
   }

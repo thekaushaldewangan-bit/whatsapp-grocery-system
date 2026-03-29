@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build & Output
+admin-dashboard/dist/
+build/
+out/
+logs/
+*.log
+npm-debug.log*
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Audio files (temporary)
+downloads/
+
+# QR codes (temporary)
+qrcodes/
+
+# Database
+.mongodb/
+*.db
+

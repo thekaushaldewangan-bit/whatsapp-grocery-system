@@ -2,6 +2,7 @@ import twilio from 'twilio';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Settings, { SETTING_KEYS } from '../models/Settings.js';
 import logger from '../utils/logger.js';
 import { downloadAudio, transcribeAudio } from '../services/voiceService.js';
 import { parseVoiceOrder } from '../services/nlpService.js';
@@ -13,6 +14,11 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
 let client = null;
 if (!DEMO_MODE && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
   client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+}
+
+async function getWhatsAppFromNumber() {
+  const dbNumber = await Settings.get(SETTING_KEYS.TWILIO_WHATSAPP_NUMBER);
+  return dbNumber || process.env.TWILIO_WHATSAPP_NUMBER || '+14155238886';
 }
 
 // ==================== MENU DEFINITIONS ====================
@@ -28,12 +34,15 @@ const MENU_CATEGORIES = {
 
 // ==================== WEBHOOK - Main Entry Point ====================
 export const handleWhatsAppMessage = async (req, res) => {
+  // Always return 200 to Twilio to prevent retries
+  res.status(200).json({ success: true });
+
   try {
     const { From, Body, MediaUrl0, MediaContentType0, NumMedia } = req.body;
     const phoneNumber = From.replace('whatsapp:', '');
     const numMedia = parseInt(NumMedia || '0', 10);
 
-    logger.info(`📨 Received message from ${phoneNumber}`, { numMedia, MediaContentType0 });
+    logger.info(`📨 Received message from ${phoneNumber}`, { numMedia, MediaContentType0, body: Body });
 
     let user = await User.findOne({ phoneNumber });
     if (!user) {
@@ -57,11 +66,8 @@ export const handleWhatsAppMessage = async (req, res) => {
     if (responseText) {
       await sendWhatsAppMessage(phoneNumber, responseText);
     }
-
-    res.status(200).json({ success: true });
   } catch (error) {
     logger.error('Error in handleWhatsAppMessage:', error);
-    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -368,7 +374,7 @@ const placeOrder = async (user, detailsString, phoneNumber) => {
       totalAmount
     });
 
-    const upiLink = generateUPILink(totalAmount, orderId);
+    const upiLink = await generateUPILink(totalAmount, orderId);
     const qrCodePath = await generateQRCode(upiLink, orderId);
 
     order.upiLink = upiLink;
@@ -386,9 +392,10 @@ const placeOrder = async (user, detailsString, phoneNumber) => {
     try {
       const qrBase64 = await generateQRCodeBase64(upiLink);
       if (client && qrBase64) {
+        const fromNumber = await getWhatsAppFromNumber();
         const formattedNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
         await client.messages.create({
-          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+          from: `whatsapp:${fromNumber}`,
           to: `whatsapp:${formattedNumber}`,
           body: `📱 QR Code for Order ${orderId} - Scan to pay ₹${totalAmount.toFixed(2)}`,
           mediaUrl: [qrBase64]
@@ -454,10 +461,13 @@ const sendWhatsAppMessage = async (phoneNumber, message) => {
   }
 
   try {
+    const fromNumber = await getWhatsAppFromNumber();
     const formattedNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
 
+    logger.info(`📤 Sending WhatsApp from ${fromNumber} to ${formattedNumber}`);
+
     const response = await client.messages.create({
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+      from: `whatsapp:${fromNumber}`,
       to: `whatsapp:${formattedNumber}`,
       body: message
     });
@@ -465,8 +475,7 @@ const sendWhatsAppMessage = async (phoneNumber, message) => {
     logger.info(`✅ Message sent to ${phoneNumber}:`, { messageSid: response.sid });
     return response.sid;
   } catch (error) {
-    logger.error('Error sending WhatsApp message:', error);
-    throw error;
+    logger.error(`Error sending WhatsApp message to ${phoneNumber}:`, error.message);
   }
 };
 

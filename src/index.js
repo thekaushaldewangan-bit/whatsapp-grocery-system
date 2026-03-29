@@ -16,6 +16,7 @@ import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/orders.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
+import settingsRoutes from './routes/settings.js';
 
 import errorHandler from './middlewares/errorHandler.js';
 import logger from './utils/logger.js';
@@ -34,7 +35,7 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(compression());
 app.use(cors({
-  origin: process.env.REACT_APP_ADMIN_URL || 'http://localhost:5173',
+  origin: true,
   credentials: true
 }));
 app.use(morgan('combined', { stream: logger.stream }));
@@ -71,6 +72,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -143,6 +145,16 @@ async function autoSeed() {
     ];
     await Product.insertMany(sampleProducts);
     logger.info(`✅ Seeded ${sampleProducts.length} products`);
+  }
+
+  const SettingsModel = (await import('./models/Settings.js')).default;
+  const { DEFAULT_SETTINGS } = await import('./models/Settings.js');
+  const settingsCount = await SettingsModel.countDocuments();
+  if (settingsCount === 0) {
+    for (const s of DEFAULT_SETTINGS) {
+      await SettingsModel.set(s.key, process.env[s.key.toUpperCase()] || s.value, { label: s.label, group: s.group });
+    }
+    logger.info(`✅ Seeded ${DEFAULT_SETTINGS.length} default settings`);
   }
 
   const adminCount = await Admin.countDocuments();

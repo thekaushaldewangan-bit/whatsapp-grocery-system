@@ -3,16 +3,18 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import logger from '../utils/logger.js';
+import Settings, { SETTING_KEYS } from '../models/Settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const QRCODES_DIR = path.join(__dirname, '../../qrcodes');
 fs.ensureDirSync(QRCODES_DIR);
 
 // ==================== GENERATE UPI PAYMENT LINK ====================
-export const generateUPILink = (amount, orderId) => {
+export const generateUPILink = async (amount, orderId) => {
   try {
-    const upiId = process.env.UPI_ID || 'merchant@bank';
-    const shopName = encodeURIComponent(process.env.SHOP_NAME || 'Grocery Store');
+    const upiId = await Settings.get(SETTING_KEYS.UPI_ID) || process.env.UPI_ID || 'merchant@bank';
+    const shopNameRaw = await Settings.get(SETTING_KEYS.SHOP_NAME) || process.env.SHOP_NAME || 'Grocery Store';
+    const shopName = encodeURIComponent(shopNameRaw);
     const roundedAmount = Math.round(amount * 100) / 100;
 
     const upiLink = `upi://pay?pa=${upiId}&pn=${shopName}&am=${roundedAmount}&tn=Order%20${orderId}&tr=${orderId}`;

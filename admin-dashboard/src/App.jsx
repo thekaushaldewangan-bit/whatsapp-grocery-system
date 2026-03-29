@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import OrdersPage from './pages/OrdersPage'
 import ProductsPage from './pages/ProductsPage'
 import UsersPage from './pages/UsersPage'
+import SettingsPage from './pages/SettingsPage'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api'
@@ -60,6 +61,7 @@ function App() {
               <Route path="/orders" element={<OrdersPage onLogout={handleLogout} />} />
               <Route path="/products" element={<ProductsPage onLogout={handleLogout} />} />
               <Route path="/users" element={<UsersPage onLogout={handleLogout} />} />
+              <Route path="/settings" element={<SettingsPage onLogout={handleLogout} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           ) : (

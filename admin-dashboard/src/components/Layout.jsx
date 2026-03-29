@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { FiHome, FiShoppingCart, FiPackage, FiUsers, FiLogOut } from 'react-icons/fi'
+import { FiHome, FiShoppingCart, FiPackage, FiUsers, FiSettings, FiLogOut } from 'react-icons/fi'
 
 export default function Layout({ children, onLogout }) {
   const navigate = useNavigate()
@@ -16,7 +16,8 @@ export default function Layout({ children, onLogout }) {
     { icon: FiHome, label: 'Dashboard', path: '/' },
     { icon: FiShoppingCart, label: 'Orders', path: '/orders' },
     { icon: FiPackage, label: 'Products', path: '/products' },
-    { icon: FiUsers, label: 'Users', path: '/users' }
+    { icon: FiUsers, label: 'Users', path: '/users' },
+    { icon: FiSettings, label: 'Settings', path: '/settings' }
   ]
 
   return (

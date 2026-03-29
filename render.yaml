@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: whatsapp-grocery-system
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_SECRET_KEY
+        generateValue: true
+      - key: UPI_ID
+        value: demo@upi
+      - key: SHOP_NAME
+        value: Grocery Store
+      - key: SHOP_PHONE
+        value: "9999999999"
+      - key: MONGODB_URI
+        sync: false

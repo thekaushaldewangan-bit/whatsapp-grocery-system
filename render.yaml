@@ -2,6 +2,7 @@ services:
   - type: web
     name: whatsapp-grocery-system
     runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
@@ -20,4 +21,4 @@ services:
       - key: SHOP_PHONE
         value: "9999999999"
       - key: MONGODB_URI
-        sync: false
+        value: ""

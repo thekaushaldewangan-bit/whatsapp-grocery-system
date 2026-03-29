@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "build": "cd admin-dashboard && npm install && npm run build",
+    "build": "cd admin-dashboard && npm install --include=dev && npm run build",
     "test": "jest --forceExit",
     "lint": "eslint src/",
     "seed": "node src/scripts/seedDatabase.js",
